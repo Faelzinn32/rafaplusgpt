@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="RafaPLUSgpt — IA gratuita, multi-modos." />
+  <title>RafaPLUSgpt</title>
+
+  <!-- (Opcional) CSP básica (mais segurança). Funciona bem em hospedagens simples.
+       Se algo quebrar (por ex. fontes externas), remova esta linha. -->
+  <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'"> -->
+
+  <style>
+    :root{
+      --bg: #F3F1FF;           /* lilás bem claro */
+      --panel: #FFFFFF;        /* branco */
+      --panel-2: #FBFAFF;      /* off-white */
+      --accent: #A7E8C4;       /* verde pastel (botões) */
+      --accent-2: #7AD9AD;     /* verde pastel mais forte */
+      --text: #1E1E2A;
+      --muted: #6B6B7A;
+      --border: #E9E6FF;
+      --shadow: 0 12px 28px rgba(10, 10, 40, 0.08);
+      --radius: 18px;
+      --radius2: 14px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: var(--font);
+      background: radial-gradient(1100px 700px at 20% 10%, #EAFBFF 0%, transparent 55%),
+                  radial-gradient(900px 600px at 80% 0%, #FFF2FB 0%, transparent 60%),
+                  var(--bg);
+      color: var(--text);
+    }
+
+    .app{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 18px;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 16px;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+    }
+    .logo{
+      width: 42px; height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent) 0%, #FFD7F0 50%, #CDE7FF 100%);
+      box-shadow: 0 10px 18px rgba(0,0,0,.08);
+    }
+    .btitle{ font-weight: 800; letter-spacing: .2px; }
+    .bsub{ font-size: 12px; color: var(--muted); margin-top:2px; }
+
+    .modes{
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+    }
+
+    .mode-btn{
+      width:100%;
+      text-align:left;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.85);
+      cursor:pointer;
+      transition: transform .06s ease, background .15s ease, border-color .15s ease;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .mode-btn:hover{ transform: translateY(-1px); border-color: #DAD4FF; }
+    .mode-btn.active{
+      background: var(--accent);
+      border-color: rgba(0,0,0,0.06);
+    }
+    .mode-left{
+      display:flex; gap:10px; align-items:center;
+    }
+    .pill{
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(30,30,42,0.06);
+      color: rgba(30,30,42,0.75);
+      white-space:nowrap;
+    }
+    .mode-btn.active .pill{
+      background: rgba(30,30,42,0.10);
+    }
+    .emoji{
+      width: 28px; height: 28px;
+      border-radius: 10px;
+      display:grid;
+      place-items:center;
+      background: rgba(0,0,0,0.04);
+      font-size: 16px;
+    }
+
+    .side-actions{
+      margin-top:auto;
+      display:grid;
+      gap: 8px;
+    }
+    .small-btn{
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      cursor:pointer;
+      transition: transform .06s ease;
+      font-weight: 600;
+    }
+    .small-btn:hover{ transform: translateY(-1px); }
+    .danger{
+      background: #FFF1F1;
+      border-color: #FFD6D6;
+    }
+
+    /* Chat area */
+    .chat{
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      min-height: calc(100vh - 36px);
+    }
+
+    .chat-header{
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .chat-title{
+      font-weight: 800;
+      margin: 0;
+      font-size: 16px;
+    }
+    .chat-desc{
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status{
+      font-size: 12px;
+      color: var(--muted);
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      align-self:center;
+      white-space:nowrap;
+    }
+
+    .messages{
+      padding: 16px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      flex:1;
+    }
+
+    .msg{
+      max-width: 78%;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      line-height: 1.35;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .msg.user{
+      margin-left:auto;
+      background: #FFFFFF;
+      border-color: #E7E7F8;
+    }
+    .msg.ai{
+      margin-right:auto;
+      background: #FFFFFF;
+      border-color: #E7E7F8;
+      box-shadow: 0 8px 18px rgba(0,0,0,.05);
+    }
+    .meta{
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display:flex;
+      gap: 8px;
+      align-items:center;
+    }
+
+    .composer{
+      border-top: 1px solid var(--border);
+      background: var(--panel);
+      padding: 12px;
+      display:flex;
+      gap: 10px;
+      align-items:flex-end;
+    }
+    textarea{
+      width: 100%;
+      min-height: 44px;
+      max-height: 160px;
+      resize: vertical;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 12px;
+      font-family: var(--font);
+      outline: none;
+      background: #fff;
+    }
+    textarea:focus{
+      border-color: #D3CCFF;
+      box-shadow: 0 0 0 4px rgba(167,232,196,0.25);
+    }
+    .send{
+      min-width: 110px;
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      cursor:pointer;
+      font-weight: 800;
+      background: var(--accent);
+      transition: transform .06s ease, filter .15s ease;
+    }
+    .send:hover{ transform: translateY(-1px); filter: brightness(0.98); }
+    .send:active{ transform: translateY(0px); }
+
+    .hint{
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+      padding: 0 16px 14px;
+    }
+
+    @media (max-width: 900px){
+      .app{ grid-template-columns: 1fr; }
+      .chat{ min-height: 70vh; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <div class="btitle">RafaPLUSgpt</div>
+          <div class="bsub">multi-modos • clean • gratuito (protótipo)</div>
+        </div>
+      </div>
+
+      <div class="modes" id="modes"></div>
+
+      <div class="side-actions">
+        <button class="small-btn" id="newChatBtn">+ Novo chat</button>
+        <button class="small-btn danger" id="clearBtn">Limpar tudo</button>
+      </div>
+    </aside>
+
+    <main class="chat">
+      <div class="chat-header">
+        <div>
+          <h1 class="chat-title" id="chatTitle">Modo Conversa</h1>
+          <p class="chat-desc" id="chatDesc">Respostas naturais, diretas e úteis.</p>
+        </div>
+        <div class="status" id="status">Pronto ✅</div>
+      </div>
+
+      <div class="messages" id="messages"></div>
+
+      <div class="composer">
+        <textarea id="input" placeholder="Escreve aqui… (Shift+Enter quebra linha)"></textarea>
+        <button class="send" id="sendBtn">Enviar</button>
+      </div>
+      <div class="hint">Dica: este é um protótipo local (sem IA real ainda). Dá pra plugar uma API depois com segurança.</div>
+    </main>
+  </div>
+
+<script>
+  // ====== Modos ======
+  const MODES = [
+    { key: "conversa",   name: "Modo Conversa",       emoji: "💬", desc: "Respostas naturais, diretas e úteis." },
+    { key: "codex",      name: "Modo Codex",          emoji: "🧠", desc: "Foco em programação, lógica e debug." },
+    { key: "projetos",   name: "Modo Projetos",       emoji: "📌", desc: "Planejamento, passos, checklist e execução." },
+    { key: "conteudo",   name: "Modo Conteúdo",       emoji: "✍️", desc: "Textos, ideias, roteiros, posts e tudo." },
+    { key: "sites",      name: "Modo Criador de Sites",emoji:"🧩", desc: "Estrutura de páginas, UI, copy e layout." },
+    { key: "hqs",        name: "Modo HQs",            emoji: "🦸", desc: "Roteiro, cenas, personagens, arcos." },
+    { key: "imagens",    name: "Modo Imagens",        emoji: "🖼️", desc: "Prompts, estilos e direção de arte." },
+    { key: "videos",     name: "Modo Vídeos",         emoji: "🎬", desc: "Ideias, cenas, cortes, roteiro e thumbnail." },
+    { key: "estudos",    name: "Modo Estudos",        emoji: "📚", desc: "Explicações fáceis, exemplos e exercícios." }
+  ];
+
+  // ====== Estado ======
+  const els = {
+    modes: document.getElementById("modes"),
+    title: document.getElementById("chatTitle"),
+    desc: document.getElementById("chatDesc"),
+    status: document.getElementById("status"),
+    messages: document.getElementById("messages"),
+    input: document.getElementById("input"),
+    send: document.getElementById("sendBtn"),
+    newChat: document.getElementById("newChatBtn"),
+    clear: document.getElementById("clearBtn"),
+  };
+
+  const STORAGE_KEY = "rafaplusgpt_state_v1";
+
+  let state = loadState() || {
+    activeMode: "conversa",
+    chats: {
+      conversa: [],
+      codex: [],
+      projetos: [],
+      conteudo: [],
+      sites: [],
+      hqs: [],
+      imagens: [],
+      videos: [],
+      estudos: []
+    }
+  };
+
+  // ====== Render Sidebar ======
+  function renderModes(){
+    els.modes.innerHTML = "";
+    MODES.forEach(m => {
+      const btn = document.createElement("button");
+      btn.className = "mode-btn" + (state.activeMode === m.key ? " active" : "");
+      btn.type = "button";
+      btn.innerHTML = `
+        <div class="mode-left">
+          <div class="emoji" aria-hidden="true">${m.emoji}</div>
+          <div>
+            <div style="font-weight:800">${escapeHTML(m.name)}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">${escapeHTML(m.desc)}</div>
+          </div>
+        </div>
+        <div class="pill">${escapeHTML(m.key)}</div>
+      `;
+      btn.addEventListener("click", () => setMode(m.key));
+      els.modes.appendChild(btn);
+    });
+  }
+
+  // ====== Mode switch ======
+  function setMode(key){
+    const mode = MODES.find(m => m.key === key) || MODES[0];
+    state.activeMode = mode.key;
+    els.title.textContent = mode.name;
+    els.desc.textContent = mode.desc;
+    renderModes();
+    renderMessages();
+    saveState();
+  }
+
+  // ====== Messages ======
+  function renderMessages(){
+    els.messages.innerHTML = "";
+    const list = state.chats[state.activeMode] || [];
+    if(list.length === 0){
+      addSystemWelcome();
+      return;
+    }
+    list.forEach(msg => {
+      els.messages.appendChild(renderMsg(msg));
+    });
+    scrollToBottom();
+  }
+
+  function renderMsg({role, text, ts}){
+    const wrap = document.createElement("div");
+    wrap.className = "msg " + (role === "user" ? "user" : "ai");
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = `${role === "user" ? "Você" : "RafaPLUSgpt"} • ${new Date(ts).toLocaleString()}`;
+
+    const body = document.createElement("div");
+    body.textContent = text; // textContent = evita XSS
+
+    wrap.appendChild(meta);
+    wrap.appendChild(body);
+    return wrap;
+  }
+
+  function addMessage(role, text){
+    const msg = { role, text, ts: Date.now() };
+    state.chats[state.activeMode] = state.chats[state.activeMode] || [];
+    state.chats[state.activeMode].push(msg);
+    saveState();
+    els.messages.appendChild(renderMsg(msg));
+    scrollToBottom();
+  }
+
+  function addSystemWelcome(){
+    const mode = MODES.find(m => m.key === state.activeMode) || MODES[0];
+    const welcome = getWelcomeForMode(mode.key);
+    const temp = { role:"ai", text: welcome, ts: Date.now() };
+    els.messages.appendChild(renderMsg(temp));
+    scrollToBottom();
+  }
+
+  function scrollToBottom(){
+    els.messages.scrollTop = els.messages.scrollHeight;
+  }
+
+  // ====== Fake AI (placeholder) ======
+  function aiReply(userText){
+    const k = state.activeMode;
+
+    const templates = {
+      conversa: `Entendi. Me diz o objetivo e o contexto rapidinho e eu te devolvo um plano claro.\n\nO que você quer conseguir exatamente?`,
+      codex: `Beleza. Cola o trecho do código/erro e diz:\n1) linguagem\n2) o que era pra acontecer\n3) o que aconteceu.\nAí eu debugo com você.`,
+      projetos: `Fechado. Vou organizar isso em passos:\n1) objetivo\n2) requisitos\n3) próximos 3 passos\n\nQual é o prazo e o que você já tem pronto?`,
+      conteudo: `Bora. Me fala:\n- tema\n- público\n- estilo (engraçado / sério / curto)\n- onde vai publicar\n\nAí eu escrevo/estruturo.`,
+      sites: `Ok. Me diz:\n- tipo de site (portfólio, loja, landing)\n- seções\n- cores\n- referências\n\nDaí eu monto a estrutura e o layout.`,
+      hqs: `Partiu HQ. Me dá:\n- herói/vilão\n- poderes\n- problema principal\n- tom (mais sério ou zoeira)\n\nAí eu te devolvo o primeiro capítulo.`,
+      imagens: `Me fala o que você quer ver na imagem + estilo (realista, anime, 3D, cartoon) + ambiente.\nEu te devolvo 3 prompts top.`,
+      videos: `Qual plataforma (YouTube/TikTok), duração e tema?\nEu te devolvo roteiro + cortes + ideia de thumbnail.`,
+      estudos: `Qual matéria e qual assunto? Eu explico do jeito mais fácil possível e mando exercícios com resposta.`
+    };
+
+    // toque “ChatGPT-like”: reconhecer e pedir info que falta
+    const base = templates[k] || templates.conversa;
+    return base;
+  }
+
+  function getWelcomeForMode(key){
+    const mode = MODES.find(m => m.key === key) || MODES[0];
+    return `👋 Você está no **${mode.name}**.\n${mode.desc}\n\nManda sua primeira mensagem.`;
+  }
+
+  // ====== Events ======
+  function send(){
+    const text = els.input.value.trim();
+    if(!text) return;
+
+    setStatus("Pensando… ⏳");
+    addMessage("user", text);
+    els.input.value = "";
+
+    // Simula tempo de resposta
+    setTimeout(() => {
+      addMessage("ai", aiReply(text));
+      setStatus("Pronto ✅");
+    }, 450);
+  }
+
+  els.send.addEventListener("click", send);
+
+  els.input.addEventListener("keydown", (e) => {
+    if(e.key === "Enter" && !e.shiftKey){
+      e.preventDefault();
+      send();
+    }
+  });
+
+  els.newChat.addEventListener("click", () => {
+    state.chats[state.activeMode] = [];
+    saveState();
+    renderMessages();
+  });
+
+  els.clear.addEventListener("click", () => {
+    const ok = confirm("Tem certeza? Isso apaga TODOS os chats salvos no navegador.");
+    if(!ok) return;
+    localStorage.removeItem(STORAGE_KEY);
+    state = {
+      activeMode: "conversa",
+      chats: {
+        conversa: [], codex: [], projetos: [], conteudo: [], sites: [],
+        hqs: [], imagens: [], videos: [], estudos: []
+      }
+    };
+    renderModes();
+    setMode("conversa");
+  });
+
+  function setStatus(txt){ els.status.textContent = txt; }
+
+  // ====== Storage ======
+  function saveState(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }catch(err){
+      console.warn("Não deu pra salvar no localStorage:", err);
+    }
+  }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return null;
+      return JSON.parse(raw);
+    }catch(err){
+      return null;
+    }
+  }
+
+  // ====== Small helpers ======
+  function escapeHTML(str){
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  // ====== Init ======
+  renderModes();
+  setMode(state.activeMode);
+</script>
+</body>
+</html>
